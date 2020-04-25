@@ -2,14 +2,11 @@ import os
 from kaggle.api.kaggle_api_extended import KaggleApi
 import logging
 
-
-
-
 def main(poject_dir):
     logger = logging.getLogger(__name__)
     logger.info('getting raw data')
     #imports
-    os.system("kaggle competitions download -c titanic -p ../data/raw") 
+    os.system("kaggle competitions download -c titanic -p ../../data/raw") 
 
     from zipfile import ZipFile
     raw_data_path = os.path.join(project_dir, 'data', 'raw')
