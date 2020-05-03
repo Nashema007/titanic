@@ -1,11 +1,15 @@
-
 import numpy as np
 import pandas as pd
 import os
+from pathlib import Path
+
+ # path 
+path = Path("../../titanic")  
 
 def read_data(): 
+      
     #set the path of the raw data
-    raw_data_path = os.path.join(os.path.pardir, 'data', 'raw')
+    raw_data_path = os.path.join(path.parent, 'data', 'raw')
     train_file_path = os.path.join(raw_data_path, 'train.csv')
     test_file_path = os.path.join(raw_data_path, 'test.csv')
     #read the data with all default parameters 
@@ -30,7 +34,7 @@ def process_data(df):
            .assign(FamilySize = lambda x: x.Parch + x.SibSp + 1)
            .assign(IsMother = lambda x: np.where((x.Sex == 'female') & (x.Parch >0)&(x.Age>18)&(x.Title !='Miss'), 1,0))
            # create deck feature
-           .assign(Cabin = lambda x:np.where(x.Cabin == 'T', np.nan, x.Cabin))
+           .pipe(set_cabin)
            .assign(Deck = lambda x : x.Cabin.map(get_deck))
            # feature encoding 
            .assign(IsMale = lambda x : np.where(x.Sex == 'male',1,0))
@@ -65,8 +69,13 @@ def get_title(name):
     title = title.strip().lower()
     return title_group[title]
 
+def set_cabin(df):
+    df.at[340, 'Cabin'] = np.NaN
+    return df
+
 def get_deck(cabin):
     return np.where(pd.notnull(cabin), str(cabin)[0].upper(), 'Z')
+
 
 def fill_missing_values(df):
     #embarked 
@@ -87,11 +96,11 @@ def reorder_columns(df):
     return df 
     
 def write_data(df):
-    processed_data_path = os.path.join(os.path.pardir, 'data', 'processed')
+    processed_data_path = os.path.join(path.parent, 'data', 'processed')
     write_train_path = os.path.join(processed_data_path, 'train.csv')
     write_test_path = os.path.join(processed_data_path, 'test.csv')
     #train data
-    df[df.Survived != -888].to_csv(write_test_path)
+    df[df.Survived != -888].to_csv(write_train_path)
     #test data
     columns = [column for column in df.columns if column != 'Survived']
     df[df.Survived == -888][columns].to_csv(write_test_path)
